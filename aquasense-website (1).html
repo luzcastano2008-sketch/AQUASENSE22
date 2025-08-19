@@ -1,0 +1,665 @@
+<html lang="es"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaSense - Editor Integrado</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:wght@400&amp;family=Montserrat:wght@300;400;600;700&amp;family=Now:wght@300;400;500&amp;display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-cyan: #00bbc9;
+            --primary-blue: #005280;
+            --teal: #008080;
+            --navy: #005080;
+            --light-cyan: #00bddb;
+        }
+
+        body {
+            font-family: 'Now', sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Editor Panel */
+        .editor-panel {
+            position: fixed;
+            top: 0;
+            right: -350px;
+            width: 350px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+            border-left: 3px solid var(--primary-cyan);
+        }
+
+        .editor-panel.open {
+            right: 0;
+        }
+
+        .editor-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-cyan);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1001;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .editor-toggle:hover {
+            background: var(--primary-blue);
+            transform: scale(1.1);
+        }
+
+        .editor-content {
+            padding: 20px;
+        }
+
+        .editor-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-cyan);
+        }
+
+        .editor-section h3 {
+            color: var(--primary-blue);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .editor-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .editor-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            min-height: 80px;
+            resize: vertical;
+            font-size: 0.9rem;
+        }
+
+        .color-picker {
+            width: 100%;
+            height: 40px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .editor-button {
+            background: var(--primary-cyan);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin: 5px 5px 5px 0;
+            transition: background 0.3s ease;
+        }
+
+        .editor-button:hover {
+            background: var(--primary-blue);
+        }
+
+        .editable {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .editable:hover {
+            outline: 2px dashed var(--primary-cyan);
+            outline-offset: 2px;
+        }
+
+        .editable.editing {
+            outline: 2px solid var(--primary-blue);
+            outline-offset: 2px;
+        }
+
+        /* Main Styles */
+        header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--teal));
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-cyan);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 20px;
+            color: white;
+        }
+
+        .company-name {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .contact-info {
+            text-align: right;
+            font-size: 0.95rem;
+        }
+
+        .contact-info div {
+            margin-bottom: 5px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--light-cyan), var(--primary-cyan));
+            padding: 100px 0;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 4rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.4rem;
+            max-width: 800px;
+            margin: 0 auto 40px;
+            opacity: 0.95;
+        }
+
+        .features-section {
+            padding: 80px 0;
+            background: #f8fafb;
+        }
+
+        .section-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 3rem;
+            text-align: center;
+            color: var(--primary-blue);
+            margin-bottom: 60px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .feature-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 15px;
+        }
+
+        .about-section {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .about-content {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .about-content h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            margin-bottom: 30px;
+        }
+
+        .about-content p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        footer {
+            background: var(--primary-blue);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .editor-panel {
+                width: 100%;
+                right: -100%;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .company-name {
+                font-size: 2rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-cyan);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            z-index: 1002;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Editor Toggle Button -->
+    <button class="editor-toggle" onclick="toggleEditor()">✏️</button>
+
+    <!-- Editor Panel -->
+    <div class="editor-panel open" id="editorPanel">
+        <div class="editor-content">
+            <h2 style="color: var(--primary-blue); margin-bottom: 20px;">🎨 Editor AquaSense</h2>
+            
+            <div class="editor-section">
+                <h3>📝 Textos Principales</h3>
+                <input type="text" class="editor-input" id="companyName" placeholder="Nombre de la empresa" value="AquaSense">
+                <button class="editor-button" onclick="updateCompanyName()">Actualizar Nombre</button>
+                
+                <input type="text" class="editor-input" id="heroTitle" placeholder="Título principal" value="Gestión Inteligente del Agua">
+                <button class="editor-button" onclick="updateHeroTitle()">Actualizar Título</button>
+                
+                <textarea class="editor-textarea" id="heroDescription" placeholder="Descripción principal">Soluciones innovadoras y sostenibles para la gestión eficiente del agua en tanques industriales. Tecnología avanzada para un futuro más sostenible.</textarea>
+                <button class="editor-button" onclick="updateHeroDescription()">Actualizar Descripción</button>
+            </div>
+
+            <div class="editor-section">
+                <h3>🎨 Colores</h3>
+                <label>Color Principal:</label>
+                <input type="color" class="color-picker" id="primaryColor" value="#00bbc9" onchange="updatePrimaryColor()">
+                
+                <label>Color Secundario:</label>
+                <input type="color" class="color-picker" id="secondaryColor" value="#005280" onchange="updateSecondaryColor()">
+                
+                <label>Color de Fondo:</label>
+                <input type="color" class="color-picker" id="bgColor" value="#f8fafb" onchange="updateBgColor()">
+            </div>
+
+            <div class="editor-section">
+                <h3>📞 Información de Contacto</h3>
+                <input type="text" class="editor-input" id="address" placeholder="Dirección" value="Cra 16 #42-31, Buenos Aires">
+                <input type="text" class="editor-input" id="phone" placeholder="Teléfono" value="311 357 1130">
+                <input type="email" class="editor-input" id="email" placeholder="Email" value="info@aquasense.com">
+                <button class="editor-button" onclick="updateContactInfo()">Actualizar Contacto</button>
+            </div>
+
+            <div class="editor-section">
+                <h3>⭐ Características</h3>
+                <div id="featuresEditor">
+                    <div style="margin-bottom: 15px;">
+                        <input type="text" class="editor-input" placeholder="Icono (emoji)" id="feature1Icon" value="💧">
+                        <input type="text" class="editor-input" placeholder="Título" id="feature1Title" value="Eficiencia Hídrica">
+                        <textarea class="editor-textarea" placeholder="Descripción" id="feature1Desc">Optimiza el uso del agua reduciendo desperdicios hasta en un 40%</textarea>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <input type="text" class="editor-input" placeholder="Icono (emoji)" id="feature2Icon" value="📊">
+                        <input type="text" class="editor-input" placeholder="Título" id="feature2Title" value="Monitoreo en Tiempo Real">
+                        <textarea class="editor-textarea" placeholder="Descripción" id="feature2Desc">Controla y supervisa tus sistemas las 24 horas</textarea>
+                    </div>
+                </div>
+                <button class="editor-button" onclick="updateFeatures()">Actualizar Características</button>
+            </div>
+
+            <div class="editor-section">
+                <h3>ℹ️ Sobre la Empresa</h3>
+                <textarea class="editor-textarea" id="aboutText" placeholder="Descripción de la empresa">Somos una empresa líder en tecnología de gestión del agua, comprometida con la innovación y la sostenibilidad. Desarrollamos soluciones inteligentes que permiten a las industrias optimizar su uso del agua.</textarea>
+                <button class="editor-button" onclick="updateAboutText()">Actualizar Descripción</button>
+            </div>
+
+            <div class="editor-section">
+                <h3>💾 Acciones</h3>
+                <button class="editor-button" onclick="saveChanges()" style="background: #28a745;">💾 Guardar Cambios</button>
+                <button class="editor-button" onclick="resetToDefault()" style="background: #dc3545;">🔄 Restaurar Original</button>
+                <button class="editor-button" onclick="exportHTML()" style="background: #17a2b8;">📥 Descargar HTML</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification show" id="notification">💾 Cambios guardados correctamente</div>
+
+    <!-- Main Content -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo" id="logoText">AS</div>
+                    <h1 class="company-name editable" id="companyNameDisplay">AQUASENSE</h1>
+                </div>
+                <div class="contact-info">
+                    <div><strong>📍 Dirección:</strong> <span id="addressDisplay">Cra 16 #42-31, Buenos Aires</span></div>
+                    <div><strong>📞 Contacto:</strong> <span id="phoneDisplay">311 357 1130</span></div>
+                    <div><strong>✉️ Email:</strong> <span id="emailDisplay">info@aquasense.com</span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1 class="editable" id="heroTitleDisplay">Gestión Inteligente del Agua</h1>
+            <p class="editable" id="heroDescriptionDisplay">Soluciones innovadoras y sostenibles para la gestión eficiente del agua en tanques industriales. Tecnología avanzada para un futuro más sostenible.</p>
+        </div>
+    </section>
+
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title">¿Por Qué Elegir AquaSense?</h2>
+            <div class="features-grid" id="featuresGrid">
+                <div class="feature-card">
+                    <div class="feature-icon" id="feature1IconDisplay">💧</div>
+                    <h3 class="feature-title" id="feature1TitleDisplay">Eficiencia Hídrica</h3>
+                    <p id="feature1DescDisplay">Optimiza el uso del agua reduciendo desperdicios hasta en un 40% con nuestros sistemas inteligentes de monitoreo.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon" id="feature2IconDisplay">📊</div>
+                    <h3 class="feature-title" id="feature2TitleDisplay">Monitoreo en Tiempo Real</h3>
+                    <p id="feature2DescDisplay">Controla y supervisa tus sistemas de agua las 24 horas con datos precisos y alertas automáticas.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🌱</div>
+                    <h3 class="feature-title">Sostenibilidad</h3>
+                    <p>Contribuye al cuidado del medio ambiente con tecnología eco-friendly y procesos sustentables.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Fácil Instalación</h3>
+                    <p>Sistema plug-and-play que se integra fácilmente con tu infraestructura existente sin complicaciones.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="about-section">
+        <div class="container">
+            <div class="about-content">
+                <h2>Sobre AquaSense</h2>
+                <p class="editable" id="aboutTextDisplay">Somos una empresa líder en tecnología de gestión del agua, comprometida con la innovación y la sostenibilidad. Desarrollamos soluciones inteligentes que permiten a las industrias optimizar su uso del agua, reducir desperdicios y contribuir a la protección del medio ambiente.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>© 2024 <span id="footerCompanyName">AquaSense</span>. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        let editorOpen = false;
+
+        function toggleEditor() {
+            const panel = document.getElementById('editorPanel');
+            editorOpen = !editorOpen;
+            panel.classList.toggle('open', editorOpen);
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function updateCompanyName() {
+            const newName = document.getElementById('companyName').value;
+            document.getElementById('companyNameDisplay').textContent = newName;
+            document.getElementById('footerCompanyName').textContent = newName;
+            document.getElementById('logoText').textContent = newName.substring(0, 2).toUpperCase();
+            showNotification('✅ Nombre de empresa actualizado');
+        }
+
+        function updateHeroTitle() {
+            const newTitle = document.getElementById('heroTitle').value;
+            document.getElementById('heroTitleDisplay').textContent = newTitle;
+            showNotification('✅ Título principal actualizado');
+        }
+
+        function updateHeroDescription() {
+            const newDesc = document.getElementById('heroDescription').value;
+            document.getElementById('heroDescriptionDisplay').textContent = newDesc;
+            showNotification('✅ Descripción actualizada');
+        }
+
+        function updateContactInfo() {
+            const address = document.getElementById('address').value;
+            const phone = document.getElementById('phone').value;
+            const email = document.getElementById('email').value;
+            
+            document.getElementById('addressDisplay').textContent = address;
+            document.getElementById('phoneDisplay').textContent = phone;
+            document.getElementById('emailDisplay').textContent = email;
+            showNotification('✅ Información de contacto actualizada');
+        }
+
+        function updateFeatures() {
+            document.getElementById('feature1IconDisplay').textContent = document.getElementById('feature1Icon').value;
+            document.getElementById('feature1TitleDisplay').textContent = document.getElementById('feature1Title').value;
+            document.getElementById('feature1DescDisplay').textContent = document.getElementById('feature1Desc').value;
+            
+            document.getElementById('feature2IconDisplay').textContent = document.getElementById('feature2Icon').value;
+            document.getElementById('feature2TitleDisplay').textContent = document.getElementById('feature2Title').value;
+            document.getElementById('feature2DescDisplay').textContent = document.getElementById('feature2Desc').value;
+            
+            showNotification('✅ Características actualizadas');
+        }
+
+        function updateAboutText() {
+            const newText = document.getElementById('aboutText').value;
+            document.getElementById('aboutTextDisplay').textContent = newText;
+            showNotification('✅ Descripción de empresa actualizada');
+        }
+
+        function updatePrimaryColor() {
+            const color = document.getElementById('primaryColor').value;
+            document.documentElement.style.setProperty('--primary-cyan', color);
+            showNotification('🎨 Color principal actualizado');
+        }
+
+        function updateSecondaryColor() {
+            const color = document.getElementById('secondaryColor').value;
+            document.documentElement.style.setProperty('--primary-blue', color);
+            showNotification('🎨 Color secundario actualizado');
+        }
+
+        function updateBgColor() {
+            const color = document.getElementById('bgColor').value;
+            document.querySelector('.features-section').style.background = color;
+            showNotification('🎨 Color de fondo actualizado');
+        }
+
+        function saveChanges() {
+            localStorage.setItem('aquasense-data', JSON.stringify({
+                companyName: document.getElementById('companyName').value,
+                heroTitle: document.getElementById('heroTitle').value,
+                heroDescription: document.getElementById('heroDescription').value,
+                address: document.getElementById('address').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                aboutText: document.getElementById('aboutText').value,
+                primaryColor: document.getElementById('primaryColor').value,
+                secondaryColor: document.getElementById('secondaryColor').value,
+                bgColor: document.getElementById('bgColor').value
+            }));
+            showNotification('💾 Cambios guardados correctamente');
+        }
+
+        function resetToDefault() {
+            if (confirm('¿Estás seguro de que quieres restaurar todos los valores originales?')) {
+                localStorage.removeItem('aquasense-data');
+                location.reload();
+            }
+        }
+
+        function exportHTML() {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'aquasense-website.html';
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('📥 Página descargada como HTML');
+        }
+
+        // Load saved data on page load
+        window.addEventListener('load', function() {
+            const savedData = localStorage.getItem('aquasense-data');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                
+                // Update form fields
+                Object.keys(data).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.value = data[key];
+                    }
+                });
+                
+                // Apply changes
+                updateCompanyName();
+                updateHeroTitle();
+                updateHeroDescription();
+                updateContactInfo();
+                updateAboutText();
+                updatePrimaryColor();
+                updateSecondaryColor();
+                updateBgColor();
+            }
+        });
+
+        // Make elements editable on click
+        document.querySelectorAll('.editable').forEach(element => {
+            element.addEventListener('click', function() {
+                const currentText = this.textContent;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentText;
+                input.style.width = '100%';
+                input.style.padding = '5px';
+                input.style.fontSize = window.getComputedStyle(this).fontSize;
+                input.style.fontFamily = window.getComputedStyle(this).fontFamily;
+                
+                this.innerHTML = '';
+                this.appendChild(input);
+                input.focus();
+                
+                input.addEventListener('blur', () => {
+                    this.textContent = input.value;
+                    showNotification('✏️ Texto actualizado');
+                });
+                
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        input.blur();
+                    }
+                });
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9714d89480d4e9f4',t:'MTc1NTU1NjEyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><iframe height="1" width="1" style="position: absolute; top: 0px; left: 0px; border: none; visibility: hidden;"></iframe>
+</body></html>
